@@ -45,10 +45,9 @@ def build_channel_apk(apk_path, apk_channel_path, channel_list, output_dir, jks_
     if not os.path.exists(apk_path):
         raise Exception("文件不存在")
 
-    # todo 签名检测，结果应该是0，但是要对输出做校验
-    # verify_ret = os.system(f"apksigner verify {apk_path}")
-    # if verify_ret == 0:
-    #     raise Exception("apk文件不应包含签名")
+    verify_ret = os.system(f"apksigner verify {apk_path}")
+    if verify_ret == 0:
+        raise RuntimeError("apk文件不应包含签名")
 
     print('生成渠道文件...')
     channel_file_name = os.path.split(apk_channel_path)[-1]
@@ -116,7 +115,7 @@ if __name__ == '__main__':
             and apk_channel list that each line contain one apk_channel name, output signal-apk_channel apk files.
         """)
     parser.add_argument("--apk", help='origin non-signal apk file', required=True)
-    parser.add_argument("--apk-apk_channel-path", help='apk_channel file path in apk', required=True)
+    parser.add_argument("--apk-channel-path", help='apk_channel file path in apk', required=True)
     parser.add_argument("--apk_channel", help='apk_channel list', required=True)
     parser.add_argument("--jks", help='java keystore', required=True)
     parser.add_argument("--jks-pass", help='jks password', required=True)
@@ -124,4 +123,4 @@ if __name__ == '__main__':
                         default=join(sys.path[0], 'build'))
     args = parser.parse_args()
     clean_workspace(args.output)
-    build_channel_apk(args.apk, args.apk_channel_path, args.channel, args.output, args.jks, args.jks_pass)
+    build_channel_apk(args.apk, args.apk_channel_path, args.apk_channel, args.output, args.jks, args.jks_pass)
