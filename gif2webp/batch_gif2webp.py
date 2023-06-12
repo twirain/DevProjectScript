@@ -11,8 +11,8 @@ def log(msg):
     print(msg)
 
 
-def process(src, dst, options):
-    cmd = f"{libwebp_util.get_gif2webp()} {options} {src} -o {dst}"
+def transform(src, dst, options):
+    cmd = f"{libwebp_util.get_gif2webp()} {src} {options} -o {dst}"
 
     p = subprocess.Popen(cmd, shell=True, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (stdout, stderr) = p.communicate()
@@ -39,6 +39,21 @@ def format_file_size(byte_size):
     return f"{byte_size:.2f} TB"
 
 
+def process(input_dir, output_dir, option=''):
+    if os.path.isfile(input_dir):
+        transform(input_dir, output_dir, args.option)
+    elif os.path.isdir(input_dir):
+        for file in os.listdir(input_dir):
+            if not file.endswith('.gif'):
+                log(f"{file} is not a gif.")
+                continue
+            src_gif = os.path.join(input_dir, file)
+            dst_webp = os.path.join(output_dir, file.replace('.gif', '.webp'))
+            transform(src_gif, dst_webp, option)
+    else:
+        raise RuntimeError(f"Unknown Input Args. {input_dir}")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=f"""
                 batch gif2webp tools. v{version}
@@ -47,16 +62,4 @@ if __name__ == '__main__':
     parser.add_argument("--output", help='output file or directory', required=True)
     parser.add_argument("--option", help='gif2webp option. default value is -lossy', required=False, default='-lossy')
     args = parser.parse_args()
-
-    if os.path.isfile(args.input):
-        process(args.input, args.output, args.option)
-    elif os.path.isdir(args.input):
-        for file in os.listdir(args.input):
-            if not file.endswith('.gif'):
-                log(f"{file} is not a gif.")
-                continue
-            src_gif = os.path.join(args.input, file)
-            dst_webp = os.path.join(args.output, file.replace('.gif', '.webp'))
-            process(src_gif, dst_webp, args.option)
-    else:
-        raise RuntimeError(f"Unknown Input Args. {args.input}")
+    process(args.input, args.output, args.option)
